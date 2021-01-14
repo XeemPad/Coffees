@@ -136,9 +136,14 @@ class AddEditWindow(QWidget):
             for column in range(self.tableWidget.columnCount()):
                 note.append(self.tableWidget.item(row, column).text().strip())
             note[1] = note[1].lower().capitalize()
-            if note[1] not in map(lambda sort: sort[1], self.coffee_sorts):
+            for sort in self.coffee_sorts:
+                if note[1] == sort[1]:  # Поиск по названию сорта
+                    note[1] = sort[0]  # Превращение в соответствующий id
+                    break
+            else:
                 self.infoLabel2.setText('Добавлен неизвестный сорт. Изменения не сохранены')
                 return
+
             notes.append(note)
         # Вызываем функцию для переписывания базы данных:
         self.edit_db(notes)
