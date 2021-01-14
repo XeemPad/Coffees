@@ -90,26 +90,58 @@ class AddEditWindow(QWidget):
     def add_row(self):
         c_id = self.last_id + 1
         sort_id = self.comboBox.currentText().split(' - ')[0]
-        roast = int(self.lineEdit2.text().strip())
-        condition_type = self.lineEdit3.text().strip()
-        description = self.textEdit.toPlainText().strip()
-        price = int(self.lineEdit4.text().strip())
-        volume = self.lineEdit5.text().strip()
+        try:
+            roast = int(self.lineEdit2.text().strip())
+            price = int(self.lineEdit4.text().strip())
+        except ValueError:
+            self.infoLabel1.setText('Поля "Степень обжарки" и "Цена" - целые числа')
+        else:
+            condition_type = self.lineEdit3.text().strip()
+            description = self.textEdit.toPlainText().strip()
+            volume = self.lineEdit5.text().strip()
+            if not (roast and condition_type and description and price and volume):
+                self.infoLabel1.setText('Не все поля заполнены, невозможно добавить запись')
+            else:
+                self.infoLabel1.setText('')
 
+                con = sqlite3.connect('coffee.sqlite')
+                cur = con.cursor()
+
+                cur.execute('''INSERT INTO coffee(id, name_of_variety, roast, type, 
+                                                  taste_description, price, package_volume)
+                               VALUES(?, ?, ?, ?, ?, ?, ?)''',
+                            (c_id, sort_id, roast, condition_type, description, price, volume))
+                con.commit()
+                con.close()
+                self.infoLabel1.setText('Запись успешно добавлена')
+                self.update_table()
+
+    def edit_db(self, new_data):
         con = sqlite3.connect('coffee.sqlite')
         cur = con.cursor()
+        cur.execute('DELETE from coffee')
 
-        cur.execute('''INSERT INTO coffee(id, name_of_variety, roast, type, 
-                                          taste_description, price, package_volume)
-                       VALUES(?, ?, ?, ?, ?, ?, ?)''',
-                    (c_id, sort_id, roast, condition_type, description, price, volume))
+        for row in new_data:
+            cur.execute('''INSERT INTO coffee(id, name_of_variety, roast, type, 
+                                              taste_description, price, package_volume)
+                           VALUES(?, ?, ?, ?, ?, ?, ?)''', row)
+        # Подтверждение изменение:
         con.commit()
         con.close()
-        self.infoLabel1.setText('Запись успешно добавлена')
-        self.update_table()
 
     def save_table(self):
-        pass
+        notes = []
+        for row in range(self.tableWidget.rowCount()):
+            note = []
+            for column in range(self.tableWidget.columnCount()):
+                note.append(self.tableWidget.item(row, column).text().strip())
+            note[1] = note[1].lower().capitalize()
+            if note[1] not in map(lambda sort: sort[1], self.coffee_sorts):
+                self.infoLabel2.setText('Добавлен неизвестный сорт. Изменения не сохранены')
+                return
+            notes.append(note)
+        # Вызываем функцию для переписывания базы данных:
+        self.edit_db(notes)
 
 
 if __name__ == '__main__':
