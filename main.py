@@ -3,13 +3,17 @@ import sqlite3
 
 from PyQt5.QtWidgets import QApplication, QWidget, QTableWidgetItem
 from PyQt5.QtCore import Qt
-from PyQt5 import uic
+
+from main_window import Ui_Form as Main_Ui
+from addEditCoffeeForm import Ui_Form as AddEdit_Ui
+
+DB_DIRECTORY = 'data/coffee.sqlite'
 
 
-class MainWindow(QWidget):
+class MainWindow(QWidget, Main_Ui):
     def __init__(self):
         super().__init__()
-        uic.loadUi('main.ui', self)
+        self.setupUi(self)
         self.initUi()
 
     def initUi(self):
@@ -23,7 +27,7 @@ class MainWindow(QWidget):
         self.addedit_w.show()
 
     def update_table(self):
-        con = sqlite3.connect('coffee.sqlite')
+        con = sqlite3.connect(DB_DIRECTORY)
         cur = con.cursor()
 
         result = cur.execute('''SELECT coffee.id, coffee_variety.name, coffee.roast, coffee.type, 
@@ -40,10 +44,10 @@ class MainWindow(QWidget):
         self.tableWidget.resizeColumnsToContents()
 
 
-class AddEditWindow(QWidget):
+class AddEditWindow(QWidget, AddEdit_Ui):
     def __init__(self):
         super().__init__()
-        uic.loadUi('addEditCoffeeForm.ui', self)
+        self.setupUi(self)
         self.initUi()
 
     def initUi(self):
@@ -57,7 +61,7 @@ class AddEditWindow(QWidget):
         self.add_variants()
 
     def update_table(self):
-        con = sqlite3.connect('coffee.sqlite')
+        con = sqlite3.connect(DB_DIRECTORY)
         cur = con.cursor()
 
         result = cur.execute('''SELECT coffee.id, coffee_variety.name, coffee.roast, coffee.type, 
@@ -77,7 +81,7 @@ class AddEditWindow(QWidget):
         self.tableWidget.resizeColumnsToContents()
 
     def add_variants(self):
-        con = sqlite3.connect('coffee.sqlite')
+        con = sqlite3.connect(DB_DIRECTORY)
         cur = con.cursor()
 
         result = cur.execute('''SELECT id, name FROM coffee_variety''').fetchall()
@@ -104,7 +108,7 @@ class AddEditWindow(QWidget):
             else:
                 self.infoLabel1.setText('')
 
-                con = sqlite3.connect('coffee.sqlite')
+                con = sqlite3.connect(DB_DIRECTORY)
                 cur = con.cursor()
 
                 cur.execute('''INSERT INTO coffee(id, name_of_variety, roast, type, 
@@ -117,7 +121,7 @@ class AddEditWindow(QWidget):
                 self.update_table()
 
     def edit_db(self, new_data):
-        con = sqlite3.connect('coffee.sqlite')
+        con = sqlite3.connect(DB_DIRECTORY)
         cur = con.cursor()
         cur.execute('DELETE from coffee')
 
